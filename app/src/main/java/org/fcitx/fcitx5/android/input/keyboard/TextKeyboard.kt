@@ -32,6 +32,18 @@ class TextKeyboard(
 
         val Layout: List<List<KeyDef>> = listOf(
             listOf(
+                AlphabetKey("1", "1"),
+                AlphabetKey("2", "2"),
+                AlphabetKey("3", "3"),
+                AlphabetKey("4", "4"),
+                AlphabetKey("5", "5"),
+                AlphabetKey("6", "6"),
+                AlphabetKey("7", "7"),
+                AlphabetKey("8", "8"),
+                AlphabetKey("9", "9"),
+                AlphabetKey("0", "0")
+            ),
+            listOf(
                 AlphabetKey("Q", "1"),
                 AlphabetKey("W", "2"),
                 AlphabetKey("E", "3"),
