@@ -120,16 +120,8 @@ val PopupPreset: Map<String, Array<String>> = hashMapOf(
     //
     // Numbers
     //
-    "0" to arrayOf("∅", "ⁿ", "⁰"),
-    "1" to arrayOf("¹", "½", "⅓", "¼", "⅕", "⅙", "⅐", "⅛", "⅑", "⅒"),
-    "2" to arrayOf("²", "⅖", "⅔"),
-    "3" to arrayOf("³", "⅗", "¾", "⅜"),
-    "4" to arrayOf("⁴", "⅘", "⅝", "⅚"),
-    "5" to arrayOf("⁵", "⅝", "⅚"),
-    "6" to arrayOf("⁶"),
-    "7" to arrayOf("⁷", "⅞"),
-    "8" to arrayOf("⁸"),
-    "9" to arrayOf("⁹"),
+
+
     //
     // Punctuation
     //

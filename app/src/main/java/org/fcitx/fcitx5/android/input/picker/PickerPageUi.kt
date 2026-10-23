@@ -46,7 +46,9 @@ import splitties.views.dsl.constraintlayout.topToBottomOf
 import splitties.views.dsl.core.Ui
 import splitties.views.dsl.core.add
 import splitties.views.dsl.core.matchParent
+import androidx.viewpager2.widget.ViewPager2
 
+  
 class PickerPageUi(
     override val ctx: Context,
     theme: Theme,
@@ -63,7 +65,7 @@ class PickerPageUi(
         val showBackspace: Boolean
     ) {
         // symbol: 10/10/8, backspace on bottom right
-        High(28, 10, 3, 19f, false, true),
+        High(36, 10, 4, 28f, false, true),
 
         // emoji: 7/7/6, backspace on bottom right
         Medium(20, 7, 3, 23.7f, false, true),
@@ -104,7 +106,14 @@ class PickerPageUi(
         border = if (bordered) Border.On else Border.Off,
         viewId = R.id.button_backspace
     )
+    // 翻頁按鈕外觀 (使用鍵盤標準向右箭頭 >，亦可改用 R.drawable.ic_baseline_sync_24 循環雙箭頭)
+    private val nextPageAppearance = Appearance.Image(
+        src = R.drawable.ic_baseline_keyboard_arrow_right_24,
+        variant = Variant.Alternative,
+        border = if (bordered) Border.On else Border.Off
+    )
 
+  
     private val backspaceKey by lazy {
         val action: (View) -> Unit = {
             keyActionListener?.onKeyAction(BackspaceAction, Source.Keyboard)
@@ -118,62 +127,156 @@ class PickerPageUi(
     }
 
     override val root = constraintLayout {
-        val columnCount = density.columnCount
-        val rowCount = density.rowCount
-        val keyWidth = 1f / columnCount
-        keyViews.forEachIndexed { i, keyView ->
-            val row = i / columnCount
-            val column = i % columnCount
-            add(keyView, lParams {
-                // layout_constraintTop_to
-                if (row == 0) {
-                    // first row, align top to top of parent
-                    topOfParent()
-                } else {
-                    // not first row, align top to bottom of first view in last row
-                    topToBottomOf(keyViews[(row - 1) * columnCount])
+        if (density == Density.High) {
+            // ==========================================
+            // 1. 符號面板 (Symbol) 專屬：10 / 10 / 9 / 7 排版
+            // ==========================================
+            val rowCount = density.rowCount
+            fun getRowAndCol(index: Int): Pair<Int, Int> = when {
+                index < 10 -> 0 to index        // 第 1 排 10 個
+                index < 20 -> 1 to (index - 10) // 第 2 排 10 個
+                index < 29 -> 2 to (index - 20) // 第 3 排 9 個
+                else -> 3 to (index - 29)       // 第 4 排 7 個
+            }
+            val rowStarts = intArrayOf(0, 10, 20, 29)
+            // 第 4 排左側 15%：循環翻頁按鈕（取代原本的空白 leftSpacer）
+            val nextPageKey = ImageKeyView(ctx, theme, nextPageAppearance).apply {
+                setOnClickListener { view ->
+                    // 往上尋找承載本畫面的 ViewPager2
+                    var p = view.parent
+                    while (p != null) {
+                        if (p is ViewPager2) {
+                            val adapter = p.adapter as? PickerPagesAdapter
+                            if (adapter != null) {
+                                // 取得當前符號分類的頁數範圍（例如 1?# 的第 1 頁到第 2 頁）
+                                val range = adapter.getCategoryRangeOfPage(p.currentItem)
+                                // 若還沒到最後一頁就 +1，若已到最後一頁就循環回 range.first（第一頁）
+                                val next = if (p.currentItem < range.last) {
+                                    p.currentItem + 1
+                                } else {
+                                    range.first
+                                }
+                                p.setCurrentItem(next, false)
+                            }
+                            break
+                        }
+                        p = p.parent
+                    }
                 }
-                // layout_constraintBottom_to
-                if (row == rowCount - 1) {
-                    // last row, align bottom to bottom of parent
-                    bottomOfParent()
-                } else {
-                    // not last row, align bottom to top of first view in next row
-                    bottomToTopOf(keyViews[(row + 1) * columnCount])
-                }
-                // layout_constraintLeft_to
-                if (column == 0) {
-                    // first column, align start to start of parent
-                    leftOfParent()
-                } else {
-                    // not first column, align start to end of last column
-                    leftToRightOf(keyViews[i - 1])
-                }
-                matchConstraintPercentWidth = keyWidth
-            })
-        }
-        if (density.showBackspace) {
-            add(backspaceKey, lParams {
-                // top to bottom of first view of second-last row
-                below(keyViews[(rowCount - 2) * columnCount])
-                // bottom/right corner
+            }
+            // 將按鈕加入左下角（維持佔滿 15% 寬度，對齊 Caps 鍵位置）
+            add(nextPageKey, lParams {
+                below(keyViews[rowStarts[rowCount - 2]])
                 bottomOfParent()
-                rightOfParent()
+                leftOfParent()
                 matchConstraintPercentWidth = 0.15f
             })
-            keyViews.last().updateLayoutParams<ConstraintLayout.LayoutParams> {
-                // align right of last key to left of backspace
-                rightToLeftOf(backspaceKey)
+
+  
+            keyViews.forEachIndexed { i, keyView ->
+                val (row, column) = getRowAndCol(i)
+                add(keyView, lParams {
+                    if (row == 0) {
+                        topOfParent()
+                    } else {
+                        topToBottomOf(keyViews[rowStarts[row - 1]])
+                    }
+                    if (row == rowCount - 1) {
+                        bottomOfParent()
+                    } else {
+                        bottomToTopOf(keyViews[rowStarts[row + 1]])
+                    }
+                    when (row) {
+                        0, 1 -> {
+                            if (column == 0) leftOfParent() else leftToRightOf(keyViews[i - 1])
+                        }
+                        2 -> {
+                            if (column == 0) {
+                                leftOfParent()
+                                rightToLeftOf(keyViews[i + 1])
+                                horizontalChainStyle = ConstraintLayout.LayoutParams.CHAIN_PACKED
+                            } else if (column == 8) {
+                                rightOfParent()
+                                leftToRightOf(keyViews[i - 1])
+                            } else {
+                                leftToRightOf(keyViews[i - 1])
+                                rightToLeftOf(keyViews[i + 1])
+                            }
+                        }
+                        3 -> {
+                            if (column == 0) {
+                                leftToRightOf(nextPageKey)  // <--- 改為連到翻頁按鈕右側
+                            } else {
+                                leftToRightOf(keyViews[i - 1])
+                            }
+                            if (column == 6) {
+                                rightToLeftOf(backspaceKey)
+                            }
+                        }
+
+  
+                    }
+                    matchConstraintPercentWidth = 0.1f
+                })
             }
-            keyViews[(rowCount - 1) * columnCount].updateLayoutParams<ConstraintLayout.LayoutParams> {
-                // first key of last row, align its right to the left of its next sibling
-                rightToLeftOf(keyViews[(rowCount - 1) * columnCount + 1])
-                // pack the entire last row together, towards the backspace
-                horizontalChainStyle = ConstraintLayout.LayoutParams.CHAIN_PACKED
+            if (density.showBackspace) {
+                add(backspaceKey, lParams {
+                    below(keyViews[rowStarts[rowCount - 2]])
+                    bottomOfParent()
+                    rightOfParent()
+                    matchConstraintPercentWidth = 0.15f
+                })
+            }
+        } else {
+            // ==========================================
+            // 2. Emoji 與顏文字面板：維持原本預設排版
+            // ==========================================
+            val columnCount = density.columnCount
+            val rowCount = density.rowCount
+            val keyWidth = 1f / columnCount
+            keyViews.forEachIndexed { i, keyView ->
+                val row = i / columnCount
+                val column = i % columnCount
+                add(keyView, lParams {
+                    if (row == 0) {
+                        topOfParent()
+                    } else {
+                        topToBottomOf(keyViews[(row - 1) * columnCount])
+                    }
+                    if (row == rowCount - 1) {
+                        bottomOfParent()
+                    } else {
+                        bottomToTopOf(keyViews[(row + 1) * columnCount])
+                    }
+                    if (column == 0) {
+                        leftOfParent()
+                    } else {
+                        leftToRightOf(keyViews[i - 1])
+                    }
+                    matchConstraintPercentWidth = keyWidth
+                })
+            }
+            if (density.showBackspace) {
+                add(backspaceKey, lParams {
+                    below(keyViews[(rowCount - 2) * columnCount])
+                    bottomOfParent()
+                    rightOfParent()
+                    matchConstraintPercentWidth = 0.15f
+                })
+                keyViews.last().updateLayoutParams<ConstraintLayout.LayoutParams> {
+                    rightToLeftOf(backspaceKey)
+                }
+                keyViews[(rowCount - 1) * columnCount].updateLayoutParams<ConstraintLayout.LayoutParams> {
+                    rightToLeftOf(keyViews[(rowCount - 1) * columnCount + 1])
+                    horizontalChainStyle = ConstraintLayout.LayoutParams.CHAIN_PACKED
+                }
             }
         }
         layoutParams = ViewGroup.LayoutParams(matchParent, matchParent)
     }
+
+  
+  
 
     private fun onSymbolClick(str: String) {
         keyActionListener?.onKeyAction(CommitAction(str), Source.Keyboard)

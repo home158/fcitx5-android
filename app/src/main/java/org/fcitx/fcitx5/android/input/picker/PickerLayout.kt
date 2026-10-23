@@ -77,7 +77,7 @@ class PickerLayout(context: Context, theme: Theme, switchKey: KeyDef) :
             below(pager)
             centerHorizontally()
             bottomOfParent()
-            matchConstraintPercentHeight = 0.25f
+            matchConstraintPercentHeight = 0.20f
         })
         add(paginationUi.root, lParams(matchConstraints, dp(2)) {
             centerHorizontally()
