@@ -15,6 +15,7 @@ android {
     defaultConfig {
         applicationId = "org.fcitx.fcitx5.android"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        resourceConfigurations += listOf("zh-rTW", "zh-rCN", "en")
 
         @Suppress("UnstableApiUsage")
         externalNativeBuild {
@@ -70,14 +71,44 @@ kotlin {
 fcitxComponent {
     includeLibs = listOf(
         "fcitx5",
-        "fcitx5-lua",
         "libime",
         "fcitx5-chinese-addons"
     )
-    // exclude (delete immediately after install) tables that nobody would use
-    excludeFiles = listOf("cangjie", "erbi", "qxm", "wanfeng").map {
+    // exclude unneeded tables, pinyin, opencc, lua, unicode, and non-zh/en locales for extreme slimming
+    excludeFiles = listOf(
+        // unneeded built-in input methods (user uses custom table + english keyboard)
+        "cangjie", "erbi", "qxm", "wanfeng",
+        "db", "wbpy", "wbx", "zrm",
+        "pinyin", "shuangpin"
+    ).map {
         "usr/share/fcitx5/inputmethod/$it.conf"
-    }
+    } + listOf(
+        // unneeded addon configs (keep table, punctuation, spell, clipboard, quickphrase, and table dependency pinyinhelper)
+        "pinyin", "chttrans", "luaaddonloader", "imeapi", "unicode"
+    ).map {
+        "usr/share/fcitx5/addon/$it.conf"
+    } + listOf(
+        // unneeded directories & large data
+        "usr/share/opencc",
+        "usr/share/fcitx5/lua",
+        "usr/share/fcitx5/chttrans",
+        "usr/share/fcitx5/pinyin",
+        "usr/share/fcitx5/pinyinhelper",
+        "usr/share/fcitx5/unicode",
+        "usr/share/fcitx5/table",
+        "usr/share/libime",
+        // non-zh/en locale directories
+        "usr/share/locale/ca",
+        "usr/share/locale/da",
+        "usr/share/locale/de",
+        "usr/share/locale/es",
+        "usr/share/locale/fr",
+        "usr/share/locale/he",
+        "usr/share/locale/ja",
+        "usr/share/locale/ko",
+        "usr/share/locale/ru",
+        "usr/share/locale/vi"
+    )
     installPrebuiltAssets = true
 }
 

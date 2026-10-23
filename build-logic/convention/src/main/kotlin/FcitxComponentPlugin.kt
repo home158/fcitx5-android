@@ -49,7 +49,7 @@ class FcitxComponentPlugin : Plugin<Project> {
                     dependsOn(installTask)
                     doLast {
                         ext.excludeFiles.forEach {
-                            project.assetsDir.resolve(it).delete()
+                            project.assetsDir.resolve(it).deleteRecursively()
                         }
                     }
                 }
