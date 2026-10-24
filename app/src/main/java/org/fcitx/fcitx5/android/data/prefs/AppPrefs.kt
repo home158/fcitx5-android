@@ -172,6 +172,16 @@ class AppPrefs(private val sharedPreferences: SharedPreferences) {
             LangSwitchBehavior.Enumerate
         ) { showLangSwitchKey.getValue() }
 
+        val keyboardFontSize = int(
+            R.string.keyboard_font_size,
+            "keyboard_font_size_percent",
+            100,
+            60,
+            160,
+            "%",
+            5
+        )
+
         val keyboardHeightPercent: ManagedPreference.PInt
         val keyboardHeightPercentLandscape: ManagedPreference.PInt
 
