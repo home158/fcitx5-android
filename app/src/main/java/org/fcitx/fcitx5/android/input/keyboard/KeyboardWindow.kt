@@ -68,6 +68,7 @@ class KeyboardWindow : InputWindow.SimpleInputWindow<KeyboardWindow>(), Essentia
     private val keyboards: HashMap<String, BaseKeyboard> by lazy {
         hashMapOf(
             TextKeyboard.Name to TextKeyboard(context, theme),
+            ZhuyinKeyboard.Name to ZhuyinKeyboard(context, theme),
             NumberKeyboard.Name to NumberKeyboard(context, theme)
         )
     }
@@ -138,17 +139,28 @@ class KeyboardWindow : InputWindow.SimpleInputWindow<KeyboardWindow>(), Essentia
         }
     }
 
+    private fun defaultTextKeyboard(): String {
+        val currentIme = fcitx.runImmediately { inputMethodEntryCached }
+        return if (currentIme.uniqueName == "chewing") ZhuyinKeyboard.Name else TextKeyboard.Name
+    }
+
     override fun onStartInput(info: EditorInfo, capFlags: CapabilityFlags) {
         val targetLayout = when (info.inputType and InputType.TYPE_MASK_CLASS) {
             InputType.TYPE_CLASS_NUMBER -> NumberKeyboard.Name
             InputType.TYPE_CLASS_PHONE -> NumberKeyboard.Name
-            else -> TextKeyboard.Name
+            else -> defaultTextKeyboard()
         }
         switchLayout(targetLayout, remember = false)
     }
 
     override fun onImeUpdate(ime: InputMethodEntry) {
-        currentKeyboard?.onInputMethodUpdate(ime)
+        if (currentKeyboardName == TextKeyboard.Name && ime.uniqueName == "chewing") {
+            switchLayout(ZhuyinKeyboard.Name, remember = false)
+        } else if (currentKeyboardName == ZhuyinKeyboard.Name && ime.uniqueName != "chewing") {
+            switchLayout(TextKeyboard.Name, remember = false)
+        } else {
+            currentKeyboard?.onInputMethodUpdate(ime)
+        }
     }
 
     override fun onPunctuationUpdate(mapping: Map<String, String>) {
