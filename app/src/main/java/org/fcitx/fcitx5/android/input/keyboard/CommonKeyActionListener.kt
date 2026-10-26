@@ -5,6 +5,7 @@
 
 package org.fcitx.fcitx5.android.input.keyboard
 
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
@@ -24,6 +25,7 @@ import org.fcitx.fcitx5.android.input.keyboard.CommonKeyActionListener.Backspace
 import org.fcitx.fcitx5.android.input.keyboard.KeyAction.CommitAction
 import org.fcitx.fcitx5.android.input.keyboard.KeyAction.DeleteSelectionAction
 import org.fcitx.fcitx5.android.input.keyboard.KeyAction.FcitxKeyAction
+import org.fcitx.fcitx5.android.input.keyboard.KeyAction.ImeSwitchAction
 import org.fcitx.fcitx5.android.input.keyboard.KeyAction.LangSwitchAction
 import org.fcitx.fcitx5.android.input.keyboard.KeyAction.MoveSelectionAction
 import org.fcitx.fcitx5.android.input.keyboard.KeyAction.PickerSwitchAction
@@ -34,7 +36,6 @@ import org.fcitx.fcitx5.android.input.keyboard.KeyAction.SymAction
 import org.fcitx.fcitx5.android.input.keyboard.KeyAction.UnicodeAction
 import org.fcitx.fcitx5.android.input.picker.PickerWindow
 import org.fcitx.fcitx5.android.input.wm.InputWindowManager
-import org.fcitx.fcitx5.android.utils.switchToNextIME
 import org.mechdancer.dependency.Dependent
 import org.mechdancer.dependency.UniqueComponent
 import org.mechdancer.dependency.manager.ManagedHandler
@@ -126,8 +127,20 @@ class CommonKeyActionListener :
                                 toggleIme()
                             }
                         }
-                        LangSwitchBehavior.NextInputMethodApp -> {
-                            service.switchToNextIME()
+                    }
+                }
+                is ImeSwitchAction -> {
+                    service.postFcitxJob {
+                        if (enabledIme().size < 2) {
+                            service.lifecycleScope.launch {
+                                service.showDialog(AddMoreInputMethodsPrompt.build(context))
+                            }
+                        } else {
+                            enumerateIme(action.forward)
+                            val newIme = currentIme()
+                            service.lifecycleScope.launch {
+                                Toast.makeText(context, newIme.displayName, Toast.LENGTH_SHORT).show()
+                            }
                         }
                     }
                 }
