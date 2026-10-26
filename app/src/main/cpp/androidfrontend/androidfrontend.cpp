@@ -78,8 +78,8 @@ public:
             const auto &bulk = list->toBulk();
             if (bulk) {
                 size = bulk->totalSize();
-                // limit candidate count to 16 (for paging)
-                const int limit = size < 0 ? 16 : std::min(size, 16);
+                // limit candidate count to 100 (for paging)
+                const int limit = size < 0 ? 100 : std::min(size, 100);
                 for (int i = 0; i < limit; i++) {
                     try {
                         auto &candidate = bulk->candidateFromAll(i);
