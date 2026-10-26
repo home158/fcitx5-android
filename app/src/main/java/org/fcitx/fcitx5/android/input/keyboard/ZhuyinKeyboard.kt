@@ -91,21 +91,19 @@ class ZhuyinKeyboard(
                 ZhuyinKey("ㄠ", "l", FcitxKeyMapping.FcitxKey_l, 0.1f),
                 ZhuyinKey("ㄤ", ";", FcitxKeyMapping.FcitxKey_semicolon, 0.1f)
             ),
-            // Row 4: Switch English + 10 keys (ㄈ ㄌ ㄏ ㄒ ㄖ ㄙ ㄩ ㄝ ㄡ ㄥ) + Backspace
-            // 0.11f + 10 * 0.078f + 0.11f = 1.0f
+            // Row 4: 10 keys (ㄈ ㄌ ㄏ ㄒ ㄖ ㄙ ㄩ ㄝ ㄡ ㄥ) + Backspace
             listOf(
-                LayoutSwitchKey("EN", TextKeyboard.Name, 0.11f, KeyDef.Appearance.Variant.Alternative),
-                ZhuyinKey("ㄈ", "z", FcitxKeyMapping.FcitxKey_z, 0.078f),
-                ZhuyinKey("ㄌ", "x", FcitxKeyMapping.FcitxKey_x, 0.078f),
-                ZhuyinKey("ㄏ", "c", FcitxKeyMapping.FcitxKey_c, 0.078f),
-                ZhuyinKey("ㄒ", "v", FcitxKeyMapping.FcitxKey_v, 0.078f),
-                ZhuyinKey("ㄖ", "b", FcitxKeyMapping.FcitxKey_b, 0.078f),
-                ZhuyinKey("ㄙ", "n", FcitxKeyMapping.FcitxKey_n, 0.078f),
-                ZhuyinKey("ㄩ", "m", FcitxKeyMapping.FcitxKey_m, 0.078f),
-                ZhuyinKey("ㄝ", ",", FcitxKeyMapping.FcitxKey_comma, 0.078f),
-                ZhuyinKey("ㄡ", ".", FcitxKeyMapping.FcitxKey_period, 0.078f),
-                ZhuyinKey("ㄥ", "/", FcitxKeyMapping.FcitxKey_slash, 0.078f),
-                BackspaceKey(0.11f)
+                ZhuyinKey("ㄈ", "z", FcitxKeyMapping.FcitxKey_z, 0.0909f),
+                ZhuyinKey("ㄌ", "x", FcitxKeyMapping.FcitxKey_x, 0.0909f),
+                ZhuyinKey("ㄏ", "c", FcitxKeyMapping.FcitxKey_c, 0.0909f),
+                ZhuyinKey("ㄒ", "v", FcitxKeyMapping.FcitxKey_v, 0.0909f),
+                ZhuyinKey("ㄖ", "b", FcitxKeyMapping.FcitxKey_b, 0.0909f),
+                ZhuyinKey("ㄙ", "n", FcitxKeyMapping.FcitxKey_n, 0.0909f),
+                ZhuyinKey("ㄩ", "m", FcitxKeyMapping.FcitxKey_m, 0.0909f),
+                ZhuyinKey("ㄝ", ",", FcitxKeyMapping.FcitxKey_comma, 0.0909f),
+                ZhuyinKey("ㄡ", ".", FcitxKeyMapping.FcitxKey_period, 0.0909f),
+                ZhuyinKey("ㄥ", "/", FcitxKeyMapping.FcitxKey_slash, 0.0909f),
+                BackspaceKey(0.091f)
             ),
             // Row 5: ?123, Comma, Lang, Space (一聲), ., Return
             listOf(

@@ -29,6 +29,7 @@ import android.view.inputmethod.InlineSuggestionsRequest
 import android.view.inputmethod.InlineSuggestionsResponse
 import android.view.inputmethod.InputMethodSubtype
 import android.widget.FrameLayout
+import android.widget.Toast
 import android.widget.inline.InlinePresentationSpec
 import androidx.annotation.Keep
 import androidx.annotation.RequiresApi
@@ -40,6 +41,7 @@ import androidx.autofill.inline.v1.InlineSuggestionUi
 import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
@@ -60,6 +62,7 @@ import org.fcitx.fcitx5.android.data.InputFeedbacks
 import org.fcitx.fcitx5.android.data.prefs.AppPrefs
 import org.fcitx.fcitx5.android.data.prefs.ManagedPreference
 import org.fcitx.fcitx5.android.data.prefs.ManagedPreferenceProvider
+import org.fcitx.fcitx5.android.data.table.TableManager
 import org.fcitx.fcitx5.android.data.theme.Theme
 import org.fcitx.fcitx5.android.data.theme.ThemeManager
 import org.fcitx.fcitx5.android.input.cursor.CursorRange
@@ -207,15 +210,38 @@ class FcitxInputMethodService : LifecycleInputMethodService() {
                 SubtypeManager.syncWith(enabledIme())
             }
         }
+        lifecycleScope.launch(Dispatchers.IO) {
+            TableManager.ensureReverseLookupLoaded()
+        }
         super.onCreate()
         decorView = window.window!!.decorView
         contentView = decorView.findViewById(android.R.id.content)
+    }
+
+    private var reverseLookupToast: Toast? = null
+
+    private fun showReverseLookupPopup(text: String, code: String) {
+        val message = "$text: $code"
+        reverseLookupToast?.cancel()
+        reverseLookupToast = Toast.makeText(this, message, Toast.LENGTH_SHORT).also {
+            it.show()
+        }
     }
 
     private fun handleFcitxEvent(event: FcitxEvent<*>) {
         when (event) {
             is FcitxEvent.CommitStringEvent -> {
                 commitText(event.data.text, event.data.cursor)
+                val text = event.data.text
+                if (text.isNotBlank()) {
+                    val currentIme = runCatching { fcitx.runImmediately { inputMethodEntryCached.uniqueName } }.getOrNull()
+                    if (currentIme == "chewing") {
+                        val code = TableManager.reverseLookupWord(text)
+                        if (code != null) {
+                            showReverseLookupPopup(text, code)
+                        }
+                    }
+                }
             }
             is FcitxEvent.KeyEvent -> event.data.let event@{
                 if (it.states.virtual) {
