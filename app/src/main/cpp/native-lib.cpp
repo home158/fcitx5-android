@@ -1210,9 +1210,16 @@ Java_org_fcitx_fcitx5_android_data_table_TableManager_reverseLookup(
     }
     std::string w = *CString(env, word);
     try {
-        std::string code = s_reverseLookupDict->reverseLookup(w);
-        if (!code.empty()) {
-            return env->NewStringUTF(code.c_str());
+        auto codes = s_reverseLookupDict->reverseLookupAll(w);
+        if (!codes.empty()) {
+            std::string result;
+            for (const auto &c : codes) {
+                if (!result.empty()) {
+                    result += ", ";
+                }
+                result += c;
+            }
+            return env->NewStringUTF(result.c_str());
         }
     } catch (...) {
     }

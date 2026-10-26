@@ -221,11 +221,10 @@ class FcitxInputMethodService : LifecycleInputMethodService() {
     private var reverseLookupToast: Toast? = null
 
     private fun showReverseLookupPopup(text: String, code: String) {
-        val tableName = TableManager.currentReverseLookupTableName
-        val message = if (tableName.isNotBlank()) {
-            "[$tableName] $text: $code"
-        } else {
+        val message = if (text.length == 1 || !code.contains('(')) {
             "$text: $code"
+        } else {
+            code
         }
         reverseLookupToast?.cancel()
         reverseLookupToast = Toast.makeText(this, message, Toast.LENGTH_SHORT).also {

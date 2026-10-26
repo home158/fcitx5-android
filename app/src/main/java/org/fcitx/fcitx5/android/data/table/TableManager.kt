@@ -191,7 +191,7 @@ object TableManager {
                 val c = reverseLookup(ch)
                 if (c != null) {
                     if (sb.isNotEmpty()) sb.append(" ")
-                    sb.append(c)
+                    sb.append("$ch($c)")
                 }
                 i += Character.charCount(cp)
             }
