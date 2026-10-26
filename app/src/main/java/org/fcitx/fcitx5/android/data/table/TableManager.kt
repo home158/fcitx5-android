@@ -131,13 +131,29 @@ object TableManager {
     @Volatile
     private var reverseLookupLoaded = false
 
+    @Volatile
+    var currentReverseLookupTableName: String = ""
+        private set
+
     fun reloadReverseLookupDict() {
         reverseLookupLoaded = false
+        currentReverseLookupTableName = ""
         ensureReverseLookupLoaded()
     }
 
     fun ensureReverseLookupLoaded() {
         if (reverseLookupLoaded) return
+        val methods = runCatching { inputMethods() }.getOrNull()
+        if (!methods.isNullOrEmpty()) {
+            for (im in methods) {
+                val dictFile = File(tableDicDir, im.tableFileName)
+                if (dictFile.exists() && loadReverseLookupDict(dictFile.absolutePath)) {
+                    reverseLookupLoaded = true
+                    currentReverseLookupTableName = im.name
+                    return
+                }
+            }
+        }
         val dirs = listOf(
             tableDicDir,
             File(appContext.filesDir, "data/table"),
@@ -150,6 +166,7 @@ object TableManager {
                     for (file in files) {
                         if (loadReverseLookupDict(file.absolutePath)) {
                             reverseLookupLoaded = true
+                            currentReverseLookupTableName = file.name.substringBefore('.')
                             return
                         }
                     }
