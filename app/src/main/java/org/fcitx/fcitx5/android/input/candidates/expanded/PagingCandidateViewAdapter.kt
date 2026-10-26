@@ -6,8 +6,11 @@
 package org.fcitx.fcitx5.android.input.candidates.expanded
 
 import android.view.ViewGroup
+import androidx.core.text.buildSpannedString
+import androidx.core.text.color
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
+import org.fcitx.fcitx5.android.data.table.TableManager
 import org.fcitx.fcitx5.android.data.theme.Theme
 import org.fcitx.fcitx5.android.input.candidates.CandidateItemUi
 import org.fcitx.fcitx5.android.input.candidates.CandidateViewHolder
@@ -41,7 +44,20 @@ open class PagingCandidateViewAdapter(val theme: Theme) :
 
     override fun onBindViewHolder(holder: CandidateViewHolder, position: Int) {
         val text = getItem(position)!!
-        holder.ui.text.text = text
+        val code = TableManager.reverseLookupWord(text)
+        if (code != null) {
+            holder.ui.text.text = buildSpannedString {
+                color(theme.candidateTextColor) {
+                    append(text)
+                }
+                append(" ")
+                color(theme.candidateCommentColor) {
+                    append("[$code]")
+                }
+            }
+        } else {
+            holder.ui.text.text = text
+        }
         holder.text = text
         holder.idx = position + offset
     }

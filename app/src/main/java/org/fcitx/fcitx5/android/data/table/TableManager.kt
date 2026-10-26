@@ -90,6 +90,7 @@ object TableManager {
             errorRuntime(R.string.invalid_table_dict, it.message)
         }
         im.save()
+        reloadReverseLookupDict()
         return im
     }
 
@@ -107,6 +108,7 @@ object TableManager {
                 dict.toLibIMEDictionary(File(tempDir, im.tableFileName))
             }.onSuccess {
                 it.file.copyTo(File(tableDicDir, im.tableFileName), overwrite = true)
+                reloadReverseLookupDict()
             }.onFailure {
                 dictFile.delete()
                 errorRuntime(R.string.invalid_table_dict, it.message)
@@ -119,6 +121,67 @@ object TableManager {
 
     @JvmStatic
     external fun checkTableDictFormat(src: String, user: Boolean = false): Boolean
+
+    @JvmStatic
+    external fun loadReverseLookupDict(path: String): Boolean
+
+    @JvmStatic
+    external fun reverseLookup(word: String): String?
+
+    @Volatile
+    private var reverseLookupLoaded = false
+
+    fun reloadReverseLookupDict() {
+        reverseLookupLoaded = false
+        ensureReverseLookupLoaded()
+    }
+
+    fun ensureReverseLookupLoaded() {
+        if (reverseLookupLoaded) return
+        val dirs = listOf(
+            tableDicDir,
+            File(appContext.filesDir, "data/table"),
+            File(appContext.filesDir, "usr/share/fcitx5/table")
+        )
+        for (dir in dirs) {
+            if (dir.exists()) {
+                val files = dir.listFiles { f -> f.name.endsWith(".main.dict") || f.name.endsWith(".dict") }
+                if (!files.isNullOrEmpty()) {
+                    for (file in files) {
+                        if (loadReverseLookupDict(file.absolutePath)) {
+                            reverseLookupLoaded = true
+                            return
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fun reverseLookupWord(rawText: String): String? {
+        val word = rawText.substringBefore(' ').substringBefore('~').trim()
+        if (word.isEmpty()) return null
+        ensureReverseLookupLoaded()
+        if (!reverseLookupLoaded) return null
+        val direct = reverseLookup(word)
+        if (!direct.isNullOrEmpty()) return direct
+        if (word.codePointCount(0, word.length) > 1) {
+            val sb = StringBuilder()
+            var i = 0
+            while (i < word.length) {
+                val cp = word.codePointAt(i)
+                val ch = String(Character.toChars(cp))
+                val c = reverseLookup(ch)
+                if (c != null) {
+                    if (sb.isNotEmpty()) sb.append(" ")
+                    sb.append(c)
+                }
+                i += Character.charCount(cp)
+            }
+            if (sb.isNotEmpty()) return sb.toString()
+        }
+        return null
+    }
 
     const val MODE_BIN_TO_TXT = true
     const val MODE_TXT_TO_BIN = false

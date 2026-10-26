@@ -11,6 +11,7 @@ import android.widget.TextView
 import androidx.core.text.buildSpannedString
 import androidx.core.text.color
 import org.fcitx.fcitx5.android.core.FcitxEvent
+import org.fcitx.fcitx5.android.data.table.TableManager
 import org.fcitx.fcitx5.android.data.theme.Theme
 import splitties.views.backgroundColor
 import splitties.views.dsl.core.Ui
@@ -30,12 +31,17 @@ class LabeledCandidateItemUi(
         val labelFg = if (active) theme.genericActiveForegroundColor else theme.candidateLabelColor
         val fg = if (active) theme.genericActiveForegroundColor else theme.candidateTextColor
         val altFg = if (active) theme.genericActiveForegroundColor else theme.candidateCommentColor
+        val comment = if (candidate.comment.isNotBlank()) {
+            candidate.comment
+        } else {
+            TableManager.reverseLookupWord(candidate.text)?.let { "[$it]" } ?: ""
+        }
         root.text = buildSpannedString {
             color(labelFg) { append(candidate.label) }
             color(fg) { append(candidate.text) }
-            if (candidate.comment.isNotBlank()) {
+            if (comment.isNotBlank()) {
                 append(" ")
-                color(altFg) { append(candidate.comment) }
+                color(altFg) { append(comment) }
             }
         }
         val bg = if (active) theme.genericActiveBackgroundColor else Color.TRANSPARENT

@@ -8,8 +8,11 @@ package org.fcitx.fcitx5.android.input.candidates.horizontal
 import android.annotation.SuppressLint
 import android.view.ViewGroup
 import androidx.annotation.CallSuper
+import androidx.core.text.buildSpannedString
+import androidx.core.text.color
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.flexbox.FlexboxLayoutManager
+import org.fcitx.fcitx5.android.data.table.TableManager
 import org.fcitx.fcitx5.android.data.theme.Theme
 import org.fcitx.fcitx5.android.input.candidates.CandidateItemUi
 import org.fcitx.fcitx5.android.input.candidates.CandidateViewHolder
@@ -50,7 +53,20 @@ open class HorizontalCandidateViewAdapter(val theme: Theme) :
     @CallSuper
     override fun onBindViewHolder(holder: CandidateViewHolder, position: Int) {
         val text = candidates[position]
-        holder.ui.text.text = text
+        val code = TableManager.reverseLookupWord(text)
+        if (code != null) {
+            holder.ui.text.text = buildSpannedString {
+                color(theme.candidateTextColor) {
+                    append(text)
+                }
+                append(" ")
+                color(theme.candidateCommentColor) {
+                    append("[$code]")
+                }
+            }
+        } else {
+            holder.ui.text.text = text
+        }
         holder.text = text
         holder.idx = position
     }

@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 
 #include <memory>
+#include <mutex>
 #include <future>
 #include <fstream>
 
@@ -1167,6 +1168,55 @@ Java_org_fcitx_fcitx5_android_data_table_TableManager_checkTableDictFormat(JNIEn
         throwJavaException(env, e.what());
     }
     return JNI_TRUE;
+}
+
+static std::unique_ptr<libime::TableBasedDictionary> s_reverseLookupDict;
+static std::string s_reverseLookupDictPath;
+static std::mutex s_reverseLookupMutex;
+
+extern "C"
+JNIEXPORT jboolean JNICALL
+Java_org_fcitx_fcitx5_android_data_table_TableManager_loadReverseLookupDict(
+    JNIEnv *env, jclass clazz, jstring path) {
+    if (!path) {
+        return JNI_FALSE;
+    }
+    std::string p = *CString(env, path);
+    std::lock_guard<std::mutex> lock(s_reverseLookupMutex);
+    if (s_reverseLookupDict && s_reverseLookupDictPath == p) {
+        return JNI_TRUE;
+    }
+    try {
+        auto dict = std::make_unique<libime::TableBasedDictionary>();
+        dict->load(p.c_str(), libime::TableFormat::Binary);
+        s_reverseLookupDict = std::move(dict);
+        s_reverseLookupDictPath = p;
+        return JNI_TRUE;
+    } catch (...) {
+        return JNI_FALSE;
+    }
+}
+
+extern "C"
+JNIEXPORT jstring JNICALL
+Java_org_fcitx_fcitx5_android_data_table_TableManager_reverseLookup(
+    JNIEnv *env, jclass clazz, jstring word) {
+    if (!word) {
+        return nullptr;
+    }
+    std::lock_guard<std::mutex> lock(s_reverseLookupMutex);
+    if (!s_reverseLookupDict) {
+        return nullptr;
+    }
+    std::string w = *CString(env, word);
+    try {
+        std::string code = s_reverseLookupDict->reverseLookup(w);
+        if (!code.empty()) {
+            return env->NewStringUTF(code.c_str());
+        }
+    } catch (...) {
+    }
+    return nullptr;
 }
 
 extern "C"
