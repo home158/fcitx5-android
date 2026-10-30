@@ -57,7 +57,7 @@ abstract class BaseKeyboard(
     private val expandKeypressArea by prefs.keyboard.expandKeypressArea
     private val swipeSymbolDirection by prefs.keyboard.swipeSymbolDirection
 
-    private val spaceSwipeSwitchIme = prefs.keyboard.spaceSwipeSwitchIme
+    private val spaceSwipeMoveCursor = prefs.keyboard.spaceSwipeMoveCursor
     private val spaceKeys = mutableListOf<KeyView>()
     private val spaceSwipeChangeListener = ManagedPreference.OnChangeListener<Boolean> { _, v ->
         spaceKeys.forEach {
@@ -141,7 +141,7 @@ abstract class BaseKeyboard(
                 centerHorizontally()
             })
         }
-        spaceSwipeSwitchIme.registerOnChangeListener(spaceSwipeChangeListener)
+        spaceSwipeMoveCursor.registerOnChangeListener(spaceSwipeChangeListener)
     }
 
     private fun createKeyView(def: KeyDef): KeyView {
@@ -160,21 +160,23 @@ abstract class BaseKeyboard(
             }
             if (def is SpaceKey) {
                 spaceKeys.add(this)
-                swipeEnabled = spaceSwipeSwitchIme.getValue()
-                swipeRepeatEnabled = false
-                swipeThresholdX = inputSwipeThreshold.toFloat()
+                swipeEnabled = spaceSwipeMoveCursor.getValue()
+                swipeRepeatEnabled = true
+                swipeThresholdX = selectionSwipeThreshold
                 swipeThresholdY = disabledSwipeThreshold
                 onGestureListener = OnGestureListener { view, event ->
                     when (event.type) {
-                        GestureType.Move -> {
-                            if (event.consumed) return@OnGestureListener true
-                            val count = event.countX
-                            if (count != 0) {
-                                onAction(KeyAction.ImeSwitchAction(forward = count > 0))
-                                InputFeedbacks.hapticFeedback(view, true)
+                        GestureType.Move -> when (val count = event.countX) {
+                            0 -> false
+                            else -> {
+                                val sym =
+                                    if (count > 0) FcitxKeyMapping.FcitxKey_Right else FcitxKeyMapping.FcitxKey_Left
+                                val action = KeyAction.SymAction(KeySym(sym), KeyStates.Virtual)
+                                repeat(count.absoluteValue) {
+                                    onAction(action)
+                                    if (hapticOnRepeat) InputFeedbacks.hapticFeedback(view)
+                                }
                                 true
-                            } else {
-                                false
                             }
                         }
                         else -> false

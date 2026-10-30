@@ -80,6 +80,7 @@ class TextKeyboard(
             listOf(
                 LayoutSwitchKey("?123", ""),
                 CommaKey(0.1f, KeyDef.Appearance.Variant.Alternative),
+                LanguageKey(),
                 SpaceKey(),
                 SymbolKey(".", 0.1f, KeyDef.Appearance.Variant.Alternative),
                 ReturnKey()
@@ -90,7 +91,7 @@ class TextKeyboard(
     val caps: ImageKeyView by lazy { findViewById(R.id.button_caps) }
     val backspace: ImageKeyView by lazy { findViewById(R.id.button_backspace) }
     val quickphrase: ImageKeyView by lazy { findViewById(R.id.button_quickphrase) }
-    val lang: ImageKeyView? by lazy { findViewById(R.id.button_lang) }
+    val lang: ImageKeyView by lazy { findViewById(R.id.button_lang) }
     val space: TextKeyView by lazy { findViewById(R.id.button_space) }
     val `return`: ImageKeyView by lazy { findViewById(R.id.button_return) }
 
@@ -234,7 +235,7 @@ class TextKeyboard(
     }
 
     private fun updateLangSwitchKey(visible: Boolean) {
-        lang?.visibility = if (visible) View.VISIBLE else View.GONE
+        lang.visibility = if (visible) View.VISIBLE else View.GONE
     }
 
     private fun updateAlphabetKeys() {

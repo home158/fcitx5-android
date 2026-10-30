@@ -162,10 +162,10 @@ class AppPrefs(private val sharedPreferences: SharedPreferences) {
             "space_long_press_behavior",
             SpaceLongPressBehavior.None
         )
-        val spaceSwipeSwitchIme =
-            switch(R.string.space_swipe_switch_ime, "space_swipe_switch_ime", true)
+        val spaceSwipeMoveCursor =
+            switch(R.string.space_swipe_move_cursor, "space_swipe_move_cursor", true)
         val showLangSwitchKey =
-            switch(R.string.show_lang_switch_key, "show_lang_switch_key", false)
+            switch(R.string.show_lang_switch_key, "show_lang_switch_key", true)
         val langSwitchKeyBehavior = enumList(
             R.string.lang_switch_key_behavior,
             "lang_switch_key_behavior",

@@ -105,10 +105,11 @@ class ZhuyinKeyboard(
                 ZhuyinKey("ㄥ", "/", FcitxKeyMapping.FcitxKey_slash, 0.0909f),
                 BackspaceKey(0.091f)
             ),
-            // Row 5: ?123, Comma, Space (一聲), ., Return
+            // Row 5: ?123, Comma, Lang, Space (一聲), ., Return
             listOf(
                 LayoutSwitchKey("?123", ""),
                 CommaKey(0.1f, KeyDef.Appearance.Variant.Alternative),
+                LanguageKey(),
                 SpaceKey(),
                 SymbolKey(".", 0.1f, KeyDef.Appearance.Variant.Alternative),
                 ReturnKey()
@@ -118,7 +119,7 @@ class ZhuyinKeyboard(
 
     val backspace: ImageKeyView by lazy { findViewById(R.id.button_backspace) }
     val quickphrase: ImageKeyView by lazy { findViewById(R.id.button_quickphrase) }
-    val lang: ImageKeyView? by lazy { findViewById(R.id.button_lang) }
+    val lang: ImageKeyView by lazy { findViewById(R.id.button_lang) }
     val space: TextKeyView by lazy { findViewById(R.id.button_space) }
     val `return`: ImageKeyView by lazy { findViewById(R.id.button_return) }
 
@@ -162,7 +163,7 @@ class ZhuyinKeyboard(
     }
 
     private fun updateLangSwitchKey(visible: Boolean) {
-        lang?.visibility = if (visible) View.VISIBLE else View.GONE
+        lang.visibility = if (visible) View.VISIBLE else View.GONE
     }
 
     private fun updatePunctuationKeys() {
