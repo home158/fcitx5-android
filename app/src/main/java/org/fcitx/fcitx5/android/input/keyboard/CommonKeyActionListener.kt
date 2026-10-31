@@ -10,8 +10,10 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import org.fcitx.fcitx5.android.core.FcitxAPI
+import org.fcitx.fcitx5.android.core.InputMethodEntry
 import org.fcitx.fcitx5.android.daemon.launchOnReady
 import org.fcitx.fcitx5.android.data.prefs.AppPrefs
+import org.fcitx.fcitx5.android.data.table.TableManager
 import org.fcitx.fcitx5.android.input.broadcast.PreeditEmptyStateComponent
 import org.fcitx.fcitx5.android.input.candidates.horizontal.HorizontalCandidateComponent
 import org.fcitx.fcitx5.android.input.dependency.context
@@ -89,6 +91,54 @@ class CommonKeyActionListener :
         }
     }
 
+    private var lastTableImeUniqueName: String? = null
+
+    private suspend fun FcitxAPI.switchTableAndEng() {
+        val enabled = enabledIme()
+        if (enabled.size < 2) {
+            if (enabled.isEmpty()) {
+                service.lifecycleScope.launch {
+                    service.showDialog(AddMoreInputMethodsPrompt.build(context))
+                }
+                return
+            }
+        }
+        val current = currentIme()
+
+        val tableImNames = runCatching {
+            TableManager.inputMethods().map { it.file.nameWithoutExtension }.toSet()
+        }.getOrDefault(emptySet())
+
+        val isTable = { entry: InputMethodEntry ->
+            entry.addon == "table" || entry.uniqueName in tableImNames
+        }
+
+        val tableIme = enabled.find { it.uniqueName == lastTableImeUniqueName }
+            ?: enabled.find(isTable)
+            ?: enabled.find { it.uniqueName != "keyboard-us" && it.uniqueName != "chewing" && !it.uniqueName.contains("pinyin") }
+            ?: enabled.firstOrNull { it.uniqueName != "keyboard-us" }
+
+        val engIme = enabled.find { it.uniqueName == "keyboard-us" }
+            ?: enabled.find { it.uniqueName.contains("us", ignoreCase = true) || it.uniqueName.contains("eng", ignoreCase = true) }
+            ?: enabled.firstOrNull { it != tableIme }
+
+        if (current.uniqueName != "keyboard-us" && current.uniqueName != "chewing") {
+            lastTableImeUniqueName = current.uniqueName
+        }
+
+        val targetIme = when {
+            current.uniqueName == engIme?.uniqueName -> tableIme
+            current.uniqueName == tableIme?.uniqueName -> engIme
+            else -> tableIme ?: engIme
+        }
+
+        if (targetIme != null && targetIme.uniqueName != current.uniqueName) {
+            activateIme(targetIme.uniqueName)
+        } else {
+            enumerateIme()
+        }
+    }
+
     val listener by lazy {
         KeyActionListener { action, _ ->
             when (action) {
@@ -111,23 +161,8 @@ class CommonKeyActionListener :
                     triggerUnicode()
                 }
                 is LangSwitchAction -> {
-                    when (langSwitchKeyBehavior) {
-                        LangSwitchBehavior.Enumerate -> {
-                            service.postFcitxJob {
-                                if (enabledIme().size < 2) {
-                                    service.lifecycleScope.launch {
-                                        service.showDialog(AddMoreInputMethodsPrompt.build(context))
-                                    }
-                                } else {
-                                    enumerateIme()
-                                }
-                            }
-                        }
-                        LangSwitchBehavior.ToggleActivate -> {
-                            service.postFcitxJob {
-                                toggleIme()
-                            }
-                        }
+                    service.postFcitxJob {
+                        switchTableAndEng()
                     }
                 }
                 is ImeSwitchAction -> {
