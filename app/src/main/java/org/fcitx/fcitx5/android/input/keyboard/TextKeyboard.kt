@@ -80,7 +80,7 @@ class TextKeyboard(
                 BackspaceKey(0.15f)
             ),
             listOf(
-                LanguageTextKey("英", 0.11f),
+                LanguageTextKey("中", 0.11f),
                 TextPickerSwitchKey("符", PickerWindow.Key.Symbol, 0.11f, variant = KeyDef.Appearance.Variant.Alternative),
                 SymbolKey(",", 0.09f, KeyDef.Appearance.Variant.Alternative),
                 SpaceKey(),
@@ -94,7 +94,7 @@ class TextKeyboard(
     val caps: ImageKeyView by lazy { findViewById(R.id.button_caps) }
     val backspace: ImageKeyView by lazy { findViewById(R.id.button_backspace) }
     val quickphrase: ImageKeyView? by lazy { findViewById(R.id.button_quickphrase) }
-    val lang: KeyView? by lazy { findViewById(R.id.button_lang) }
+    val lang: TextKeyView? by lazy { findViewById(R.id.button_lang) }
     val space: TextKeyView by lazy { findViewById(R.id.button_space) }
     val `return`: ImageKeyView by lazy { findViewById(R.id.button_return) }
 
@@ -184,7 +184,7 @@ class TextKeyboard(
         updateCapsButtonIcon()
         updateAlphabetKeys()
         space.mainText.text = "空格"
-        (lang as? TextKeyView)?.mainText?.text = if (isEnglish) "中" else "英"
+        lang?.mainText?.text = if (isEnglish) "英" else "中"
     }
 
     override fun onReturnDrawableUpdate(returnDrawable: Int) {
@@ -199,7 +199,7 @@ class TextKeyboard(
     override fun onInputMethodUpdate(ime: InputMethodEntry) {
         currentImeName = ime.uniqueName
         space.mainText.text = "空格"
-        (lang as? TextKeyView)?.mainText?.text = if (isEnglish) "中" else "英"
+        lang?.mainText?.text = if (isEnglish) "英" else "中"
         if (capsState != CapsState.None) {
             switchCapsState()
         } else {

@@ -14,6 +14,7 @@ import org.fcitx.fcitx5.android.core.InputMethodEntry
 import org.fcitx.fcitx5.android.daemon.launchOnReady
 import org.fcitx.fcitx5.android.data.prefs.AppPrefs
 import org.fcitx.fcitx5.android.data.table.TableManager
+import org.fcitx.fcitx5.android.input.broadcast.InputBroadcaster
 import org.fcitx.fcitx5.android.input.broadcast.PreeditEmptyStateComponent
 import org.fcitx.fcitx5.android.input.candidates.horizontal.HorizontalCandidateComponent
 import org.fcitx.fcitx5.android.input.dependency.context
@@ -58,6 +59,7 @@ class CommonKeyActionListener :
     private val preeditState: PreeditEmptyStateComponent by manager.must()
     private val horizontalCandidate: HorizontalCandidateComponent by manager.must()
     private val windowManager: InputWindowManager by manager.must()
+    private val broadcaster: InputBroadcaster by manager.must()
 
     private var lastPickerType by AppPrefs.getInstance().internal.lastPickerType
 
@@ -110,7 +112,7 @@ class CommonKeyActionListener :
         }.getOrDefault(emptySet())
 
         val isTable = { entry: InputMethodEntry ->
-            entry.addon == "table" || entry.uniqueName in tableImNames
+            entry.addon.equals("table", ignoreCase = true) || entry.uniqueName in tableImNames
         }
 
         val tableIme = enabled.find { it.uniqueName == lastTableImeUniqueName }
@@ -136,6 +138,13 @@ class CommonKeyActionListener :
             activateIme(targetIme.uniqueName)
         } else {
             enumerateIme()
+        }
+        val newIme = currentIme()
+        service.lifecycleScope.launch {
+            Toast.makeText(context, newIme.displayName, Toast.LENGTH_SHORT).show()
+        }
+        ContextCompat.getMainExecutor(service).execute {
+            broadcaster.onImeUpdate(newIme)
         }
     }
 
