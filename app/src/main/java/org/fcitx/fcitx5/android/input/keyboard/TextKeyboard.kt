@@ -15,6 +15,7 @@ import org.fcitx.fcitx5.android.core.KeyState
 import org.fcitx.fcitx5.android.core.KeyStates
 import org.fcitx.fcitx5.android.data.prefs.AppPrefs
 import org.fcitx.fcitx5.android.data.prefs.ManagedPreference
+import org.fcitx.fcitx5.android.data.table.TableManager
 import org.fcitx.fcitx5.android.data.theme.Theme
 import org.fcitx.fcitx5.android.input.picker.PickerWindow
 import org.fcitx.fcitx5.android.input.popup.PopupAction
@@ -118,6 +119,17 @@ class TextKeyboard(
     private var capsState: CapsState = CapsState.None
     private var currentImeName: String = ""
 
+    private fun isTableIme(name: String): Boolean {
+        if (name.isEmpty() || name == "keyboard-us" || name.startsWith("en") || name.contains("eng")) return false
+        val tableNames = runCatching {
+            TableManager.inputMethods().map { it.file.nameWithoutExtension }.toSet()
+        }.getOrDefault(emptySet())
+        return name in tableNames || (name != "chewing" && !name.contains("pinyin"))
+    }
+
+    private val isEnglish: Boolean
+        get() = currentImeName == "keyboard-us" || currentImeName.startsWith("en") || currentImeName.contains("eng") || (!isTableIme(currentImeName) && currentImeName != "chewing" && currentImeName.isNotEmpty())
+
     private fun transformAlphabet(c: String): String {
         return when (capsState) {
             CapsState.None -> c.lowercase()
@@ -132,7 +144,7 @@ class TextKeyboard(
         var transformed = action
         when (action) {
             is KeyAction.LookupAction -> {
-                if (currentImeName == "keyboard-us") {
+                if (isEnglish) {
                     switchCapsState()
                     return
                 }
@@ -164,7 +176,12 @@ class TextKeyboard(
                     }
                 }
             }
-            is KeyAction.CapsAction -> switchCapsState(action.lock)
+            is KeyAction.CapsAction -> {
+                if (isEnglish) {
+                    switchCapsState(action.lock)
+                }
+                return
+            }
             else -> {}
         }
         super.onAction(transformed, source)
@@ -175,6 +192,7 @@ class TextKeyboard(
         updateCapsButton()
         updateAlphabetKeys()
         space.mainText.text = "空格"
+        (lang as? TextKeyView)?.mainText?.text = if (isEnglish) "中" else "英"
     }
 
     override fun onReturnDrawableUpdate(returnDrawable: Int) {
@@ -189,7 +207,7 @@ class TextKeyboard(
     override fun onInputMethodUpdate(ime: InputMethodEntry) {
         currentImeName = ime.uniqueName
         space.mainText.text = "空格"
-        (lang as? TextKeyView)?.mainText?.text = if (ime.uniqueName == "keyboard-us") "中" else "英"
+        (lang as? TextKeyView)?.mainText?.text = if (isEnglish) "中" else "英"
         if (capsState != CapsState.None) {
             switchCapsState()
         } else {
@@ -237,7 +255,7 @@ class TextKeyboard(
 
     private fun updateCapsButton() {
         caps?.apply {
-            if (currentImeName == "keyboard-us") {
+            if (isEnglish) {
                 mainText.text = when (capsState) {
                     CapsState.None -> "⇧"
                     CapsState.Once -> "⇧"

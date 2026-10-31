@@ -176,6 +176,7 @@ class KeyboardWindow : InputWindow.SimpleInputWindow<KeyboardWindow>(), Essentia
             it.keyActionListener = keyActionListener
             it.popupActionListener = popupActionListener
             it.onAttach()
+            it.onInputMethodUpdate(fcitx.runImmediately { inputMethodEntryCached })
         }
         notifyBarLayoutChanged()
     }
