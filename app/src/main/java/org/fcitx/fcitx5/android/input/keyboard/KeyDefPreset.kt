@@ -39,6 +39,25 @@ class SymbolKey(
     )
 )
 
+class DigitKey(
+    val digit: String,
+    percentWidth: Float = 0.1f,
+    variant: Variant = Variant.Normal
+) : KeyDef(
+    Appearance.Text(
+        displayText = digit,
+        textSize = 22f,
+        percentWidth = percentWidth,
+        variant = variant
+    ),
+    setOf(
+        Behavior.Press(KeyAction.FcitxKeyAction(digit))
+    ),
+    arrayOf(
+        Popup.Preview(digit)
+    )
+)
+
 class AlphabetKey(
     val character: String,
     val punctuation: String,
@@ -100,6 +119,24 @@ class CapsKey : KeyDef(
     ),
     setOf(
         Behavior.Press(KeyAction.CapsAction(false)),
+        Behavior.LongPress(KeyAction.CapsAction(true)),
+        Behavior.DoubleTap(KeyAction.CapsAction(true))
+    )
+)
+
+class LookupKey(
+    percentWidth: Float = 0.15f,
+    variant: Variant = Variant.Alternative
+) : KeyDef(
+    Appearance.Text(
+        displayText = "查",
+        textSize = 18f,
+        textStyle = Typeface.BOLD,
+        percentWidth = percentWidth,
+        variant = variant
+    ),
+    setOf(
+        Behavior.Press(KeyAction.LookupAction),
         Behavior.LongPress(KeyAction.CapsAction(true)),
         Behavior.DoubleTap(KeyAction.CapsAction(true))
     )
@@ -195,6 +232,26 @@ class LanguageKey : KeyDef(
         src = R.drawable.ic_baseline_language_24,
         variant = Variant.AltForeground,
         viewId = R.id.button_lang
+    ),
+    setOf(
+        Behavior.Press(KeyAction.LangSwitchAction),
+        Behavior.LongPress(KeyAction.ShowInputMethodPickerAction)
+    )
+)
+
+class LanguageTextKey(
+    text: String = "英",
+    percentWidth: Float = 0.11f,
+    variant: Variant = Variant.Alternative,
+    viewId: Int = R.id.button_lang
+) : KeyDef(
+    Appearance.Text(
+        displayText = text,
+        textSize = 16f,
+        textStyle = Typeface.BOLD,
+        percentWidth = percentWidth,
+        variant = variant,
+        viewId = viewId
     ),
     setOf(
         Behavior.Press(KeyAction.LangSwitchAction),

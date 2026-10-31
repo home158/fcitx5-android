@@ -16,6 +16,7 @@ import org.fcitx.fcitx5.android.core.KeyStates
 import org.fcitx.fcitx5.android.data.prefs.AppPrefs
 import org.fcitx.fcitx5.android.data.prefs.ManagedPreference
 import org.fcitx.fcitx5.android.data.theme.Theme
+import org.fcitx.fcitx5.android.input.picker.PickerWindow
 import org.fcitx.fcitx5.android.input.popup.PopupAction
 import splitties.views.imageResource
 
@@ -32,16 +33,16 @@ class TextKeyboard(
 
         val Layout: List<List<KeyDef>> = listOf(
             listOf(
-                AlphabetKey("1", "1"),
-                AlphabetKey("2", "2"),
-                AlphabetKey("3", "3"),
-                AlphabetKey("4", "4"),
-                AlphabetKey("5", "5"),
-                AlphabetKey("6", "6"),
-                AlphabetKey("7", "7"),
-                AlphabetKey("8", "8"),
-                AlphabetKey("9", "9"),
-                AlphabetKey("0", "0")
+                DigitKey("1"),
+                DigitKey("2"),
+                DigitKey("3"),
+                DigitKey("4"),
+                DigitKey("5"),
+                DigitKey("6"),
+                DigitKey("7"),
+                DigitKey("8"),
+                DigitKey("9"),
+                DigitKey("0")
             ),
             listOf(
                 AlphabetKey("Q", "1"),
@@ -67,7 +68,7 @@ class TextKeyboard(
                 AlphabetKey("L", ")")
             ),
             listOf(
-                CapsKey(),
+                LookupKey(0.15f),
                 AlphabetKey("Z", "'"),
                 AlphabetKey("X", ":"),
                 AlphabetKey("C", "\""),
@@ -75,23 +76,24 @@ class TextKeyboard(
                 AlphabetKey("B", "!"),
                 AlphabetKey("N", "~"),
                 AlphabetKey("M", "\\"),
-                BackspaceKey()
+                BackspaceKey(0.15f)
             ),
             listOf(
-                LayoutSwitchKey("?123", ""),
-                CommaKey(0.1f, KeyDef.Appearance.Variant.Alternative),
-                LanguageKey(),
+                LanguageTextKey("英", 0.11f),
+                TextPickerSwitchKey("符", PickerWindow.Key.Symbol, 0.11f, variant = KeyDef.Appearance.Variant.Alternative),
+                SymbolKey(",", 0.09f, KeyDef.Appearance.Variant.Alternative),
                 SpaceKey(),
-                SymbolKey(".", 0.1f, KeyDef.Appearance.Variant.Alternative),
-                ReturnKey()
+                SymbolKey(".", 0.09f, KeyDef.Appearance.Variant.Alternative),
+                LayoutSwitchKey("123", NumberKeyboard.Name, 0.11f),
+                ReturnKey(0.12f)
             )
         )
     }
 
-    val caps: ImageKeyView by lazy { findViewById(R.id.button_caps) }
+    val caps: ImageKeyView? by lazy { findViewById(R.id.button_caps) }
     val backspace: ImageKeyView by lazy { findViewById(R.id.button_backspace) }
-    val quickphrase: ImageKeyView by lazy { findViewById(R.id.button_quickphrase) }
-    val lang: ImageKeyView by lazy { findViewById(R.id.button_lang) }
+    val quickphrase: ImageKeyView? by lazy { findViewById(R.id.button_quickphrase) }
+    val lang: KeyView? by lazy { findViewById(R.id.button_lang) }
     val space: TextKeyView by lazy { findViewById(R.id.button_space) }
     val `return`: ImageKeyView by lazy { findViewById(R.id.button_return) }
 
@@ -165,6 +167,7 @@ class TextKeyboard(
         capsState = CapsState.None
         updateCapsButtonIcon()
         updateAlphabetKeys()
+        space.mainText.text = "空格"
     }
 
     override fun onReturnDrawableUpdate(returnDrawable: Int) {
@@ -177,10 +180,8 @@ class TextKeyboard(
     }
 
     override fun onInputMethodUpdate(ime: InputMethodEntry) {
-        space.mainText.text = buildString {
-            append(ime.displayName)
-            ime.subMode.run { label.ifEmpty { name.ifEmpty { null } } }?.let { append(" ($it)") }
-        }
+        space.mainText.text = "空格"
+        (lang as? TextKeyView)?.mainText?.text = if (ime.uniqueName == "keyboard-us") "中" else "英"
         if (capsState != CapsState.None) {
             switchCapsState()
         }
@@ -225,7 +226,7 @@ class TextKeyboard(
     }
 
     private fun updateCapsButtonIcon() {
-        caps.img.apply {
+        caps?.img?.apply {
             imageResource = when (capsState) {
                 CapsState.None -> R.drawable.ic_capslock_none
                 CapsState.Once -> R.drawable.ic_capslock_once
@@ -235,7 +236,7 @@ class TextKeyboard(
     }
 
     private fun updateLangSwitchKey(visible: Boolean) {
-        lang.visibility = if (visible) View.VISIBLE else View.GONE
+        lang?.visibility = if (visible) View.VISIBLE else View.GONE
     }
 
     private fun updateAlphabetKeys() {

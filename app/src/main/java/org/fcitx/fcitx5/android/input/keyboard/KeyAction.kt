@@ -42,4 +42,6 @@ sealed class KeyAction {
     data class ImeSwitchAction(val forward: Boolean = true) : KeyAction()
 
     data object SpaceLongPressAction : KeyAction()
+
+    data object LookupAction : KeyAction()
 }

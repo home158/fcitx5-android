@@ -27,6 +27,7 @@ import org.fcitx.fcitx5.android.input.keyboard.KeyAction.DeleteSelectionAction
 import org.fcitx.fcitx5.android.input.keyboard.KeyAction.FcitxKeyAction
 import org.fcitx.fcitx5.android.input.keyboard.KeyAction.ImeSwitchAction
 import org.fcitx.fcitx5.android.input.keyboard.KeyAction.LangSwitchAction
+import org.fcitx.fcitx5.android.input.keyboard.KeyAction.LookupAction
 import org.fcitx.fcitx5.android.input.keyboard.KeyAction.MoveSelectionAction
 import org.fcitx.fcitx5.android.input.keyboard.KeyAction.PickerSwitchAction
 import org.fcitx.fcitx5.android.input.keyboard.KeyAction.QuickPhraseAction
@@ -194,6 +195,9 @@ class CommonKeyActionListener :
                         }
                         SpaceLongPressBehavior.ShowPicker -> showInputMethodPicker()
                     }
+                }
+                is LookupAction -> {
+                    service.lookupSelectedOrPrecedingText()
                 }
                 else -> {}
             }

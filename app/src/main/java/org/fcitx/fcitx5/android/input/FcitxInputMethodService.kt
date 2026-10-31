@@ -46,6 +46,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.fcitx.fcitx5.android.R
 import org.fcitx.fcitx5.android.core.CapabilityFlags
 import org.fcitx.fcitx5.android.core.FcitxAPI
@@ -220,7 +221,7 @@ class FcitxInputMethodService : LifecycleInputMethodService() {
 
     private var reverseLookupToast: Toast? = null
 
-    private fun showReverseLookupPopup(text: String, code: String) {
+    internal fun showReverseLookupPopup(text: String, code: String) {
         val message = if (text.length == 1 || !code.contains('(')) {
             "$text: $code"
         } else {
@@ -229,6 +230,33 @@ class FcitxInputMethodService : LifecycleInputMethodService() {
         reverseLookupToast?.cancel()
         reverseLookupToast = Toast.makeText(this, message, Toast.LENGTH_SHORT).also {
             it.show()
+        }
+    }
+
+    fun lookupSelectedOrPrecedingText() {
+        val ic = currentInputConnection ?: return
+        val selected = ic.getSelectedText(0)?.toString()
+        val textToLookup = if (!selected.isNullOrBlank()) {
+            selected.trim()
+        } else {
+            val before = ic.getTextBeforeCursor(10, 0)?.toString()
+            if (!before.isNullOrBlank()) {
+                before.trim().takeLast(1)
+            } else ""
+        }
+        if (textToLookup.isEmpty()) {
+            Toast.makeText(this, "請先輸入或選取欲查詢的字", Toast.LENGTH_SHORT).show()
+            return
+        }
+        lifecycleScope.launch(Dispatchers.IO) {
+            val code = TableManager.reverseLookupWord(textToLookup)
+            withContext(Dispatchers.Main) {
+                if (code != null) {
+                    showReverseLookupPopup(textToLookup, code)
+                } else {
+                    Toast.makeText(this@FcitxInputMethodService, "未找到「$textToLookup」的查碼", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 
