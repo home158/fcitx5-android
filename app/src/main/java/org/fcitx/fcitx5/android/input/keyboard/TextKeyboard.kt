@@ -174,6 +174,10 @@ class TextKeyboard(
                 switchCapsState(action.lock)
                 return
             }
+            is KeyAction.LangSwitchAction -> {
+                val nextIsEnglish = !isEnglish
+                lang?.mainText?.text = if (nextIsEnglish) "英" else "中"
+            }
             else -> {}
         }
         super.onAction(transformed, source)

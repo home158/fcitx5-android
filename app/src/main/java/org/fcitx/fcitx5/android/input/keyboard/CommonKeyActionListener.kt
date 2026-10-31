@@ -128,23 +128,24 @@ class CommonKeyActionListener :
             lastTableImeUniqueName = current.uniqueName
         }
 
-        val targetIme = when {
-            current.uniqueName == engIme?.uniqueName -> tableIme
-            current.uniqueName == tableIme?.uniqueName -> engIme
-            else -> tableIme ?: engIme
+        val targetIme = if (current.uniqueName == engIme?.uniqueName) {
+            tableIme
+        } else {
+            engIme
         }
 
-        if (targetIme != null && targetIme.uniqueName != current.uniqueName) {
+        val activatedIme = if (targetIme != null && targetIme.uniqueName != current.uniqueName) {
             activateIme(targetIme.uniqueName)
+            targetIme
         } else {
             enumerateIme()
+            currentIme()
         }
-        val newIme = currentIme()
         service.lifecycleScope.launch {
-            Toast.makeText(context, newIme.displayName, Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, activatedIme.displayName, Toast.LENGTH_SHORT).show()
         }
         ContextCompat.getMainExecutor(service).execute {
-            broadcaster.onImeUpdate(newIme)
+            broadcaster.onImeUpdate(activatedIme)
         }
     }
 
