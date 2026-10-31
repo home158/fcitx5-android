@@ -90,7 +90,7 @@ class TextKeyboard(
         )
     }
 
-    val caps: ImageKeyView? by lazy { findViewById(R.id.button_caps) }
+    val caps: TextKeyView? by lazy { findViewById(R.id.button_caps) }
     val backspace: ImageKeyView by lazy { findViewById(R.id.button_backspace) }
     val quickphrase: ImageKeyView? by lazy { findViewById(R.id.button_quickphrase) }
     val lang: KeyView? by lazy { findViewById(R.id.button_lang) }
@@ -116,6 +116,7 @@ class TextKeyboard(
     }
 
     private var capsState: CapsState = CapsState.None
+    private var currentImeName: String = ""
 
     private fun transformAlphabet(c: String): String {
         return when (capsState) {
@@ -130,6 +131,12 @@ class TextKeyboard(
     override fun onAction(action: KeyAction, source: KeyActionListener.Source) {
         var transformed = action
         when (action) {
+            is KeyAction.LookupAction -> {
+                if (currentImeName == "keyboard-us") {
+                    switchCapsState()
+                    return
+                }
+            }
             is KeyAction.FcitxKeyAction -> when (source) {
                 KeyActionListener.Source.Keyboard -> {
                     when (capsState) {
@@ -165,7 +172,7 @@ class TextKeyboard(
 
     override fun onAttach() {
         capsState = CapsState.None
-        updateCapsButtonIcon()
+        updateCapsButton()
         updateAlphabetKeys()
         space.mainText.text = "空格"
     }
@@ -180,10 +187,13 @@ class TextKeyboard(
     }
 
     override fun onInputMethodUpdate(ime: InputMethodEntry) {
+        currentImeName = ime.uniqueName
         space.mainText.text = "空格"
         (lang as? TextKeyView)?.mainText?.text = if (ime.uniqueName == "keyboard-us") "中" else "英"
         if (capsState != CapsState.None) {
             switchCapsState()
+        } else {
+            updateCapsButton()
         }
     }
 
@@ -221,16 +231,26 @@ class TextKeyboard(
                     else -> CapsState.None
                 }
             }
-        updateCapsButtonIcon()
+        updateCapsButton()
         updateAlphabetKeys()
     }
 
-    private fun updateCapsButtonIcon() {
-        caps?.img?.apply {
-            imageResource = when (capsState) {
-                CapsState.None -> R.drawable.ic_capslock_none
-                CapsState.Once -> R.drawable.ic_capslock_once
-                CapsState.Lock -> R.drawable.ic_capslock_lock
+    private fun updateCapsButton() {
+        caps?.apply {
+            if (currentImeName == "keyboard-us") {
+                mainText.text = when (capsState) {
+                    CapsState.None -> "⇧"
+                    CapsState.Once -> "⇧"
+                    CapsState.Lock -> "⇪"
+                }
+                mainText.textSize = 22f
+                mainText.setTextColor(
+                    if (capsState != CapsState.None) theme.accentKeyTextColor else theme.altKeyTextColor
+                )
+            } else {
+                mainText.text = "查"
+                mainText.textSize = 18f
+                mainText.setTextColor(theme.altKeyTextColor)
             }
         }
     }

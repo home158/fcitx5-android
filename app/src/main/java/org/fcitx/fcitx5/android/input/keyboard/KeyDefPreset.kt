@@ -126,14 +126,16 @@ class CapsKey : KeyDef(
 
 class LookupKey(
     percentWidth: Float = 0.15f,
-    variant: Variant = Variant.Alternative
+    variant: Variant = Variant.Alternative,
+    viewId: Int = R.id.button_caps
 ) : KeyDef(
     Appearance.Text(
         displayText = "查",
         textSize = 18f,
         textStyle = Typeface.BOLD,
         percentWidth = percentWidth,
-        variant = variant
+        variant = variant,
+        viewId = viewId
     ),
     setOf(
         Behavior.Press(KeyAction.LookupAction),
