@@ -69,7 +69,7 @@ class TextKeyboard(
                 AlphabetKey("L", ")")
             ),
             listOf(
-                LookupKey(0.15f),
+                CapsKey(),
                 AlphabetKey("Z", "'"),
                 AlphabetKey("X", ":"),
                 AlphabetKey("C", "\""),
@@ -91,7 +91,7 @@ class TextKeyboard(
         )
     }
 
-    val caps: TextKeyView? by lazy { findViewById(R.id.button_caps) }
+    val caps: ImageKeyView by lazy { findViewById(R.id.button_caps) }
     val backspace: ImageKeyView by lazy { findViewById(R.id.button_backspace) }
     val quickphrase: ImageKeyView? by lazy { findViewById(R.id.button_quickphrase) }
     val lang: KeyView? by lazy { findViewById(R.id.button_lang) }
@@ -143,12 +143,6 @@ class TextKeyboard(
     override fun onAction(action: KeyAction, source: KeyActionListener.Source) {
         var transformed = action
         when (action) {
-            is KeyAction.LookupAction -> {
-                if (isEnglish) {
-                    switchCapsState()
-                    return
-                }
-            }
             is KeyAction.FcitxKeyAction -> when (source) {
                 KeyActionListener.Source.Keyboard -> {
                     when (capsState) {
@@ -177,9 +171,7 @@ class TextKeyboard(
                 }
             }
             is KeyAction.CapsAction -> {
-                if (isEnglish) {
-                    switchCapsState(action.lock)
-                }
+                switchCapsState(action.lock)
                 return
             }
             else -> {}
@@ -189,7 +181,7 @@ class TextKeyboard(
 
     override fun onAttach() {
         capsState = CapsState.None
-        updateCapsButton()
+        updateCapsButtonIcon()
         updateAlphabetKeys()
         space.mainText.text = "空格"
         (lang as? TextKeyView)?.mainText?.text = if (isEnglish) "中" else "英"
@@ -211,7 +203,7 @@ class TextKeyboard(
         if (capsState != CapsState.None) {
             switchCapsState()
         } else {
-            updateCapsButton()
+            updateCapsButtonIcon()
             updateAlphabetKeys()
         }
     }
@@ -250,26 +242,16 @@ class TextKeyboard(
                     else -> CapsState.None
                 }
             }
-        updateCapsButton()
+        updateCapsButtonIcon()
         updateAlphabetKeys()
     }
 
-    private fun updateCapsButton() {
-        caps?.apply {
-            if (isEnglish) {
-                mainText.text = when (capsState) {
-                    CapsState.None -> "⇧"
-                    CapsState.Once -> "⇧"
-                    CapsState.Lock -> "⇪"
-                }
-                mainText.textSize = 22f
-                mainText.setTextColor(
-                    if (capsState != CapsState.None) theme.accentKeyTextColor else theme.altKeyTextColor
-                )
-            } else {
-                mainText.text = "查"
-                mainText.textSize = 18f
-                mainText.setTextColor(theme.altKeyTextColor)
+    private fun updateCapsButtonIcon() {
+        caps.img.apply {
+            imageResource = when (capsState) {
+                CapsState.None -> R.drawable.ic_capslock_none
+                CapsState.Once -> R.drawable.ic_capslock_once
+                CapsState.Lock -> R.drawable.ic_capslock_lock
             }
         }
     }
@@ -287,11 +269,7 @@ class TextKeyboard(
                 else -> return@forEach
             }
             if (displayText.length != 1 || !displayText[0].isLetter()) return@forEach
-            it.mainText.text = if (isEnglish) {
-                transformAlphabet(displayText)
-            } else {
-                if (keepLettersUppercase) displayText.uppercase() else transformAlphabet(displayText)
-            }
+            it.mainText.text = transformAlphabet(displayText)
         }
     }
 
