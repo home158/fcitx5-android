@@ -212,6 +212,7 @@ class TextKeyboard(
             switchCapsState()
         } else {
             updateCapsButton()
+            updateAlphabetKeys()
         }
     }
 
@@ -279,10 +280,17 @@ class TextKeyboard(
 
     private fun updateAlphabetKeys() {
         textKeys.forEach {
-            if (it.def !is KeyDef.Appearance.AltText) return
-            it.mainText.text = it.def.displayText.let { str ->
-                if (str.length != 1 || !str[0].isLetter()) return@forEach
-                if (keepLettersUppercase) str.uppercase() else transformAlphabet(str)
+            val def = it.def
+            val displayText = when (def) {
+                is KeyDef.Appearance.AltText -> def.displayText
+                is KeyDef.Appearance.Text -> def.displayText
+                else -> return@forEach
+            }
+            if (displayText.length != 1 || !displayText[0].isLetter()) return@forEach
+            it.mainText.text = if (isEnglish) {
+                transformAlphabet(displayText)
+            } else {
+                if (keepLettersUppercase) displayText.uppercase() else transformAlphabet(displayText)
             }
         }
     }
